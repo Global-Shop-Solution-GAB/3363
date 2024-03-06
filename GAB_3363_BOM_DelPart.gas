@@ -1,0 +1,104 @@
+Program.Sub.ScreenSU.Start
+gui.F_delPartV..create
+gui.F_delPartV..caption("Delete confirmation")
+gui.F_delPartV..size(5400,2445)
+gui.F_delPartV..position(0,0)
+gui.F_delPartV..event(unload,f_delpartv_unload)
+gui.F_delPartV..alwaysontop(False)
+gui.F_delPartV..fontname("Arial")
+gui.F_delPartV..fontsize(8)
+gui.F_delPartV..forecolor(0)
+gui.F_delPartV..fontstyle(,,,,)
+gui.F_delPartV..BackColor(-2147483633)
+gui.F_delPartV..controlbox(True)
+gui.F_delPartV..maxbutton(False)
+gui.F_delPartV..minbutton(False)
+gui.F_delPartV..mousepointer(0)
+gui.F_delPartV..moveable(True)
+gui.F_delPartV..sizeable(True)
+gui.F_delPartV..ShowInTaskBar(True)
+gui.F_delPartV..titlebar(True)
+gui.F_delPartV.lblQ.create(label,"Are you sure you want to delete Lines with this part number?",True,4590,255,1,200,200,True,0,Arial,8,-2147483633,0)
+gui.F_delPartV.txtPart.create(textbox,"",True,2070,300,0,1350,575,False,0,Arial,8,-2147483643,1)
+gui.F_delPartV.cmdYes.create(button)
+gui.F_delPartV.cmdYes.caption("Yes")
+gui.F_delPartV.cmdYes.visible(True)
+gui.F_delPartV.cmdYes.size(855,375)
+gui.F_delPartV.cmdYes.zorder(0)
+gui.F_delPartV.cmdYes.position(1165,1200)
+gui.F_delPartV.cmdYes.enabled(True)
+gui.F_delPartV.cmdYes.fontname("Arial")
+gui.F_delPartV.cmdYes.fontsize(8)
+gui.F_delPartV.cmdYes.event(click,sub_delPart)
+gui.F_delPartV.cmdNo.create(button)
+gui.F_delPartV.cmdNo.caption("No")
+gui.F_delPartV.cmdNo.visible(True)
+gui.F_delPartV.cmdNo.size(855,375)
+gui.F_delPartV.cmdNo.zorder(0)
+gui.F_delPartV.cmdNo.position(2835,1190)
+gui.F_delPartV.cmdNo.enabled(True)
+gui.F_delPartV.cmdNo.fontname("Arial")
+gui.F_delPartV.cmdNo.fontsize(8)
+gui.F_delPartV.cmdNo.event(click,sub_selPart)
+
+
+Program.Sub.ScreenSU.End
+
+Program.Sub.Preflight.Start
+
+Variable.Global.sPart.Declare(String)
+Program.Sub.Preflight.End
+
+Program.Sub.Main.Start
+
+F.Intrinsic.Control.CallSub(Sub_selpart)
+
+Program.Sub.Main.End
+
+Program.Sub.sub_delPart.Start
+V.Local.sSql.Declare(String)
+Gui.F_delPartV..Enabled(False)
+
+F.ODBC.Connection!conx.OpenConnection(V.Ambient.PDSN,V.Ambient.PUser,V.Ambient.PPass)
+F.Intrinsic.String.concat("DELETE FROM BOM_MSTR WHERE PART ='",V.Global.sPart,"' AND SEQUENCE_BOM <>'0000'",V.Local.sSQL)
+F.ODBC.Connection!conx.Execute(V.Local.sSQL)
+
+F.Intrinsic.String.concat("DELETE FROM ROUTER_LINE WHERE PART_WC_OUTSIDE='",V.Global.sPart,"' AND LMO = 'M'",V.Local.sSQL)
+F.ODBC.Connection!conx.Execute(V.Local.sSQL)
+F.ODBC.Connection!conx.Close
+
+F.Intrinsic.UI.Msgbox("Records Deleted","Message")
+
+V.Global.sPart.Set("")
+F.Intrinsic.Control.CallSub(Sub_selpart)
+
+Program.Sub.sub_delPart.End
+
+Program.Sub.sub_selPart.Start
+V.Local.sRet.Declare(String)
+F.Intrinsic.UI.Browser(105,"",V.Local.sRet)
+Gui.F_delPartV..Enabled(False)
+	F.intrinsic.control.If(Variable.local.sRet,"<>","***CANCEL***")
+	F.intrinsic.string.Split(Variable.local.sRet,"*!*",Variable.local.sRet)
+	F.Intrinsic.String.Trim(Variable.Local.sRet(0),Variable.Local.sRet(0))
+	V.Global.sPart.Set(Variable.local.sRet(0))
+	Gui.F_delPartV.txtPart.Text(V.Global.sPart)
+	Gui.F_delPartV..Enabled(True)
+
+	Gui.F_delPartV..Show
+F.Intrinsic.Control.Else
+	F.Intrinsic.Control.End
+F.Intrinsic.Control.EndIf
+
+Program.Sub.sub_selPart.End
+
+program.sub.f_delpartv_unload.start
+F.Intrinsic.Control.End
+
+
+program.sub.f_delpartv_unload.end
+
+Program.Sub.Comments.Start
+${$0$}$GAB_BOM_DelPart$}$RICARDO$}$10/2/2012
+Program.Sub.Comments.End
+
